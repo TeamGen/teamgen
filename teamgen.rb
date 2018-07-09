@@ -1,6 +1,6 @@
 require 'optparse'
 require 'yaml'
-require './services/base'
+require_relative 'services/base'
 
 options = {}
 optparse = OptionParser.new do |opts|
@@ -30,69 +30,25 @@ optparse.parse!
 
 config = YAML.load_file(options[:config])
 
+valid_services = []
+
 config['services'].each do |s|
-  s = Services::Base.new(s)
-  unless s.valid?
-    p s.error
+  service = Services::Base.new(s)
+  if service.error.length > 0
+    p "1"
+    p service.error
     exit(-1)
   end
+
+  unless service.valid?
+    p "2"
+    p service.error
+    exit(-1)
+  end
+
+  valid_services.push(service)
 end
 
-config['services'].each do |service|
-  directory = service['name']
-  Dir.mkdir(directory)
-
-  if service['language'] === 'ruby'
-    version = '2.5'
-    entry = 'main.rb'
-
-    File.open("#{directory}/#{entry}", 'w') do |f|
-      f.write("puts 'Hello World'\n")
-    end
-
-    File.open("#{directory}/Dockerfile", 'w') do |f|
-      f.write("FROM ruby:#{version}\n")
-      f.write("RUN bundle config --global frozen 1\n")
-      f.write("WORKDIR /usr/src/app\n")
-      f.write("COPY Gemfile Gemfile.lock ./\n")
-      f.write("RUN bundle install\n")
-      f.write("COPY . .\n")
-      f.write("CMD ['./#{entry}']\n")
-    end
-
-    File.open("#{directory}/README.md", "w") do |f|
-      f.write("# #{service['name']}\n")
-      f.write("\n")
-      f.write("## To Run\n")
-      f.write("```\n")
-      f.write("docker build -t #{service['name']} .\n")
-      f.write("docker run -it --rm --name my-running-script -v \"$PWD\":/usr/src/myapp -w /usr/src/myapp ruby:#{version} ruby #{entry}\n")
-      f.write("```\n")
-    end
-
-    File.open("#{directory}/Gemfile", "w") do |f|
-    end
-
-    commands = [
-      'ruby:2.5 bundle install'
-    ]
-
-    if service['linter']
-      if service['linter']['name'] === 'rubocop'
-        commands.push('bundle add rubocop --group=development')
-        File.open("#{directory}/.rubocop.yml", "w") do |f|
-          f.write("AllCops:\n")
-          f.write("  TargetRubyVersion: #{version}\n")
-        end
-      end
-    end
-
-    if service['tests'] === 'rspec'
-      commands.push('bundle add rspec --group=test')
-      commands.push('rspec --init')
-    end
-
-    commands = commands.join(' && ')
-    `cd #{directory} && docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app #{commands}`
-  end
+valid_services.each do |service|
+  service.generate
 end
