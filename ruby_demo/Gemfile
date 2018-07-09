@@ -1,0 +1,2 @@
+
+gem "rubocop", "~> 0.46.0", :group => [:development]

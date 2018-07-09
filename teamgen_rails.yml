@@ -1,0 +1,8 @@
+services:
+  - name: ruby_demo
+    language: ruby
+    framework: rails
+    linter:
+      name: rubocop
+      plugins:
+        - rubocop-rspec
