@@ -3,3 +3,4 @@ services:
     language: ruby
     linter:
       name: rubocop
+    tests: rspec

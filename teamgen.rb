@@ -87,6 +87,14 @@ config['services'].each do |service|
       end
     end
 
+    if service['tests'] === 'rspec'
+      commands.push('bundle add rspec --group=test')
+      commands.push('rspec --init')
+    else
+      puts "unsupported tests #{service['tests']}"
+      exit(-1)
+    end
+
     commands = commands.join(' && ')
     `cd #{directory} && docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app #{commands}`
   else
