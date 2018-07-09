@@ -1,5 +1,6 @@
 require 'optparse'
 require 'yaml'
+require './services/base'
 
 options = {}
 optparse = OptionParser.new do |opts|
@@ -28,25 +29,27 @@ optparse.parse!
 #             end
 
 config = YAML.load_file(options[:config])
-p config
+
+config['services'].each do |s|
+  s = Services::Base.new(s)
+  unless s.valid?
+    p s.error
+    exit(-1)
+  end
+end
 
 config['services'].each do |service|
   directory = service['name']
   Dir.mkdir(directory)
 
-  entry = ""
-  if service['framework'] == nil
+  if service['language'] === 'ruby'
+    version = '2.5'
     entry = 'main.rb'
+
     File.open("#{directory}/#{entry}", 'w') do |f|
       f.write("puts 'Hello World'\n")
     end
-  else
-    puts "unsupported keyword framework"
-    exit(-1)
-  end
 
-  if service['language'] === 'ruby'
-    version = '2.5'
     File.open("#{directory}/Dockerfile", 'w') do |f|
       f.write("FROM ruby:#{version}\n")
       f.write("RUN bundle config --global frozen 1\n")
@@ -81,24 +84,15 @@ config['services'].each do |service|
           f.write("AllCops:\n")
           f.write("  TargetRubyVersion: #{version}\n")
         end
-      else
-        puts "unsupported linter #{service['linter']['name']}"
-        exit(-1)
       end
     end
 
     if service['tests'] === 'rspec'
       commands.push('bundle add rspec --group=test')
       commands.push('rspec --init')
-    else
-      puts "unsupported tests #{service['tests']}"
-      exit(-1)
     end
 
     commands = commands.join(' && ')
     `cd #{directory} && docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app #{commands}`
-  else
-    puts "unsupported language #{service['language']}"
-    exit(-1)
   end
 end
