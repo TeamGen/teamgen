@@ -1,5 +1,5 @@
 services:
-  - name: ruby_demo
+  - name: teamgen
     language: ruby
     linter:
       name: rubocop
