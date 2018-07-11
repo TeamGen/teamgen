@@ -7,14 +7,13 @@ class Service
   VALID_LANGUAGES = ['ruby'].freeze
   attr_reader :error
 
-  def initialize(config)
+  def initialize(config, directory)
     @config = config
-
-    @directory = @config['name'] if valid_name?
+    @directory = directory
     @language = @config['language'] if valid_language?
-
     @generator = generator
 
+    valid_name?
     valid_linter?
     valid_tests?
   end

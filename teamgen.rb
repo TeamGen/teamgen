@@ -20,6 +20,15 @@ end
 
 optparse.parse!
 
+directory = if ARGV.empty?
+              './'
+            elsif ARGV.length == 1
+              ARGV.first
+            else
+              puts optparse
+              exit(-1)
+            end
+
 config = YAML.load_file(options[:config])
 
 valid_services = []
@@ -27,7 +36,7 @@ valid_services = []
 config['services'].each do |s|
   service = nil
   begin
-    service = Service.new(s)
+    service = Service.new(s, directory)
   rescue ConfigError => error
     p error.message
     exit(-1)
