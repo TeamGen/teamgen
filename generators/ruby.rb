@@ -20,13 +20,17 @@ class Ruby < Base
   end
 
   def generate_entry_point
-    File.open("#{@directory}/#{@entry}", 'w') do |f|
+    path = "#{@directory}/#{@entry}"
+    return if File.file?(path)
+    File.open(path.to_s, 'w') do |f|
       f.write("puts 'Hello World'\n")
     end
   end
 
   def generate_dockerfile
-    File.open("#{@directory}/Dockerfile", 'w') do |f|
+    path = "#{@directory}/Dockerfile"
+    return if File.file?(path)
+    File.open(path.to_s, 'w') do |f|
       f.write("FROM ruby:#{@version}\n")
       f.write("RUN bundle config --global frozen 1\n")
       f.write("WORKDIR /usr/src/app\n")
@@ -38,7 +42,9 @@ class Ruby < Base
   end
 
   def generate_readme
-    File.open("#{@directory}/README.md", 'w') do |f|
+    path = "#{@directory}/README.md"
+    return if File.file?(path)
+    File.open(path.to_s, 'w') do |f|
       f.write("# #{@config['name']}\n")
       f.write("\n")
       f.write("## To Run\n")
@@ -50,7 +56,9 @@ class Ruby < Base
   end
 
   def generate_gemfile
-    File.open("#{@directory}/Gemfile", 'w') do |f|
+    path = "#{@directory}/Gemfile"
+    return if File.file?(path)
+    File.open(path.to_s, 'w') do |f|
     end
   end
 
@@ -58,7 +66,9 @@ class Ruby < Base
     if @config['linter']
       if @config['linter']['name'] == 'rubocop'
         @commands.push('bundle add rubocop --group=development')
-        File.open("#{@directory}/.rubocop.yml", 'w') do |f|
+        path = "#{@directory}/.rubocop.yml"
+        return if File.file?(path)
+        File.open(path.to_s, 'w') do |f|
           f.write("AllCops:\n")
           f.write("  TargetRubyVersion: #{@version}\n")
         end
@@ -74,6 +84,7 @@ class Ruby < Base
   end
 
   def run_commands
+    # TODO don't add/run commands if they have already been run
     @commands = @commands.join(' && ')
     `cd #{@directory} && docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app #{@commands}`
   end
