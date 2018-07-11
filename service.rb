@@ -1,3 +1,4 @@
+require 'fileutils'
 require_relative 'errors'
 require_relative 'generators/ruby'
 
@@ -19,7 +20,7 @@ class Service
   end
 
   def generate
-    Dir.mkdir(@directory)
+    FileUtils.mkdir_p(@directory) unless File.directory?(@directory)
     @generator.generate
   end
 
