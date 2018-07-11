@@ -1,6 +1,7 @@
 class Base
-  def initialize(config)
+  def initialize(config, directory)
     @config = config
+    @directory = directory
   end
 
   def valid_options

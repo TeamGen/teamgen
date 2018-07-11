@@ -1,8 +1,14 @@
 require_relative 'base'
 
 class Ruby < Base
-  @version = '2.5'
-  @entry = 'main.rb'
+  def initialize(*)
+    super
+    @version = '2.5'
+    @entry = 'main.rb'
+    @commands = [
+      "ruby:#{@version} bundle install"
+    ]
+  end
 
   def valid_options
     {
@@ -13,15 +19,14 @@ class Ruby < Base
     }
   end
 
-  def generate
-    directory = @config['name']
-    Dir.mkdir(directory)
-
-    File.open("#{directory}/#{@entry}", 'w') do |f|
+  def generate_entry_point
+    File.open("#{@directory}/#{@entry}", 'w') do |f|
       f.write("puts 'Hello World'\n")
     end
+  end
 
-    File.open("#{directory}/Dockerfile", 'w') do |f|
+  def generate_dockerfile
+    File.open("#{@directory}/Dockerfile", 'w') do |f|
       f.write("FROM ruby:#{@version}\n")
       f.write("RUN bundle config --global frozen 1\n")
       f.write("WORKDIR /usr/src/app\n")
@@ -30,8 +35,10 @@ class Ruby < Base
       f.write("COPY . .\n")
       f.write("CMD ['./#{@entry}']\n")
     end
+  end
 
-    File.open("#{directory}/README.md", 'w') do |f|
+  def generate_readme
+    File.open("#{@directory}/README.md", 'w') do |f|
       f.write("# #{@config['name']}\n")
       f.write("\n")
       f.write("## To Run\n")
@@ -40,30 +47,44 @@ class Ruby < Base
       f.write("docker run -it --rm --name my-running-script -v \"$PWD\":/usr/src/myapp -w /usr/src/myapp ruby:#{@version} ruby #{@entry}\n")
       f.write("```\n")
     end
+  end
 
-    File.open("#{directory}/Gemfile", 'w') do |f|
+  def generate_gemfile
+    File.open("#{@directory}/Gemfile", 'w') do |f|
     end
+  end
 
-    commands = [
-      'ruby:2.5 bundle install'
-    ]
-
+  def generate_linter
     if @config['linter']
       if @config['linter']['name'] == 'rubocop'
-        commands.push('bundle add rubocop --group=development')
-        File.open("#{directory}/.rubocop.yml", 'w') do |f|
+        @commands.push('bundle add rubocop --group=development')
+        File.open("#{@directory}/.rubocop.yml", 'w') do |f|
           f.write("AllCops:\n")
           f.write("  TargetRubyVersion: #{@version}\n")
         end
       end
     end
+  end
 
+  def generate_tests
     if @config['tests'] == 'rspec'
-      commands.push('bundle add rspec --group=test')
-      commands.push('rspec --init')
+      @commands.push('bundle add rspec --group=test')
+      @commands.push('rspec --init')
     end
+  end
 
-    commands = commands.join(' && ')
-    `cd #{directory} && docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app #{commands}`
+  def run_commands
+    @commands = @commands.join(' && ')
+    `cd #{@directory} && docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app #{@commands}`
+  end
+
+  def generate
+    generate_entry_point
+    generate_dockerfile
+    generate_readme
+    generate_gemfile
+    generate_linter
+    generate_tests
+    run_commands
   end
 end
