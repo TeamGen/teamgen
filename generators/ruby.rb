@@ -1,5 +1,5 @@
 require_relative 'base'
-require_relative 'files/readme'
+require_relative 'files/docker'
 
 class Ruby < Base
   def initialize(*)
@@ -29,17 +29,19 @@ class Ruby < Base
   end
 
   def generate_dockerfile
-    path = "#{@directory}/Dockerfile"
-    return if File.file?(path)
-    File.open(path.to_s, 'w') do |f|
-      f.write("FROM ruby:#{@version}\n")
-      f.write("RUN bundle config --global frozen 1\n")
-      f.write("WORKDIR /usr/src/app\n")
-      f.write("COPY Gemfile Gemfile.lock ./\n")
-      f.write("RUN bundle install\n")
-      f.write("COPY . .\n")
-      f.write("CMD ['./#{@entry}']\n")
-    end
+    docker = Docker.new(
+      docker_commands: [
+        "FROM ruby:#{@version}",
+        "RUN bundle config --global frozen 1",
+        "WORKDIR /usr/src/app",
+        "COPY Gemfile Gemfile.lock ./",
+        "RUN bundle install",
+        "COPY . .",
+        "CMD ['./#{@entry}']"
+      ]
+    )
+    docker.save(@directory)
+
     @usage_commands = [
       "docker build -t #{@config['name']} .",
       "docker run -it --rm --name my-running-script -v \"$PWD\":/usr/src/myapp -w /usr/src/myapp ruby:#{@version} ruby #{@entry}"
@@ -54,15 +56,14 @@ class Ruby < Base
   end
 
   def generate_linter
-    if @config['linter']
-      if @config['linter']['name'] == 'rubocop'
-        @commands.push('bundle add rubocop --group=development')
-        path = "#{@directory}/.rubocop.yml"
-        return if File.file?(path)
-        File.open(path.to_s, 'w') do |f|
-          f.write("AllCops:\n")
-          f.write("  TargetRubyVersion: #{@version}\n")
-        end
+    return unless @config['linter']
+    if @config['linter']['name'] == 'rubocop'
+      @commands.push('bundle add rubocop --group=development')
+      path = "#{@directory}/.rubocop.yml"
+      return if File.file?(path)
+      File.open(path.to_s, 'w') do |f|
+        f.write("AllCops:\n")
+        f.write("  TargetRubyVersion: #{@version}\n")
       end
     end
   end

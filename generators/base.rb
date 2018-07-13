@@ -1,3 +1,5 @@
+require_relative 'files/readme'
+
 class Base
   def initialize(config, directory)
     @config = config

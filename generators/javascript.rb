@@ -1,5 +1,5 @@
 require_relative 'base'
-require_relative 'files/readme'
+require_relative 'files/docker'
 
 class Javascript < Base
   def initialize(*)
@@ -22,11 +22,11 @@ class Javascript < Base
   end
 
   def generate_dockerfile
-    path = "#{@directory}/Dockerfile"
-    return if File.file?(path)
-    File.open(path.to_s, 'w') do |f|
-      f.write("FROM node:#{@version}\n")
-    end
+    docker = Docker.new(
+      docker_commands: ["FROM node:#{@version}"]
+    )
+    docker.save(@directory)
+
     @usage_commands = [
       "docker build -t #{@config['name']} .",
       "docker run -it --rm --name my-running-script -v \"$PWD\":/usr/src/myapp -w /usr/src/myapp node:#{@version} node #{@entry}"
