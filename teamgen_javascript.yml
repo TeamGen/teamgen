@@ -1,0 +1,4 @@
+services:
+  - name: config_builder
+    language: javascript
+    package_manager: npm

@@ -84,6 +84,7 @@ class Ruby < Base
   end
 
   def run_commands
+    return unless @commands.any?
     # TODO don't add/run commands if they have already been run
     @commands = @commands.join(' && ')
     `cd #{@directory} && docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app #{@commands}`

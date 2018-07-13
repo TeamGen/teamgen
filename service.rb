@@ -1,10 +1,11 @@
 require 'fileutils'
 require_relative 'errors'
 require_relative 'generators/ruby'
+require_relative 'generators/javascript'
 
 # Service generator
 class Service
-  VALID_LANGUAGES = ['ruby'].freeze
+  VALID_LANGUAGES = ['ruby', 'javascript'].freeze
   attr_reader :error
 
   def initialize(config, directory)
@@ -29,6 +30,8 @@ class Service
     case @language
     when 'ruby'
       Ruby.new(@config, @directory)
+    when 'javascript'
+      Javascript.new(@config, @directory)
     else
       raise ConfigError, "unsupported language #{@language}"
     end
