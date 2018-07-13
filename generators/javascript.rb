@@ -1,4 +1,5 @@
 require_relative 'base'
+require_relative 'files/readme'
 
 class Javascript < Base
   def initialize(*)
@@ -30,17 +31,14 @@ class Javascript < Base
   end
 
   def generate_readme
-    path = "#{@directory}/README.md"
-    return if File.file?(path)
-    File.open(path.to_s, 'w') do |f|
-      f.write("# #{@config['name']}\n")
-      f.write("\n")
-      f.write("## To Run\n")
-      f.write("```\n")
-      f.write("docker build -t #{@config['name']} .\n")
-      f.write("docker run -it --rm --name my-running-script -v \"$PWD\":/usr/src/myapp -w /usr/src/myapp node:#{@version} node #{@entry}\n")
-      f.write("```\n")
-    end
+    readme = Readme.new(
+      name: @config['name'],
+      to_run: [
+        "docker build -t #{@config['name']} .",
+        "docker run -it --rm --name my-running-script -v \"$PWD\":/usr/src/myapp -w /usr/src/myapp node:#{@version} node #{@entry}"
+      ]
+    )
+    readme.save(@directory)
   end
 
   def generate_package_json
