@@ -2,10 +2,10 @@ require 'erb'
 require 'ostruct'
 
 class Readme
-  def initialize(name:, to_run:)
+  def initialize(name:, usage_commands:)
     @context = {
       name: name,
-      to_run: to_run,
+      usage_commands: usage_commands,
     }
     @file_name = "README.md"
   end
@@ -13,9 +13,9 @@ class Readme
   def template
 %{# <%= name %>
 
-## To Run
+## Usage
 ```
-<%= to_run.join("\n") %>
+<%= usage_commands.join("\n") %>
 ```
 }
   end

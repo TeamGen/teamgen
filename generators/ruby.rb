@@ -40,17 +40,10 @@ class Ruby < Base
       f.write("COPY . .\n")
       f.write("CMD ['./#{@entry}']\n")
     end
-  end
-
-  def generate_readme
-    readme = Readme.new(
-      name: @config['name'],
-      to_run: [
-        "docker build -t #{@config['name']} .",
-        "docker run -it --rm --name my-running-script -v \"$PWD\":/usr/src/myapp -w /usr/src/myapp ruby:#{@version} ruby #{@entry}"
-      ]
-    )
-    readme.save(@directory)
+    @usage_commands = [
+      "docker build -t #{@config['name']} .",
+      "docker run -it --rm --name my-running-script -v \"$PWD\":/usr/src/myapp -w /usr/src/myapp ruby:#{@version} ruby #{@entry}"
+    ]
   end
 
   def generate_gemfile

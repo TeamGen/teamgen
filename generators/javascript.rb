@@ -6,8 +6,7 @@ class Javascript < Base
     super
     @entry = 'index.js'
     @version = 'latest'
-    @commands = [
-    ]
+    @commands = []
   end
 
   def valid_options
@@ -28,17 +27,10 @@ class Javascript < Base
     File.open(path.to_s, 'w') do |f|
       f.write("FROM node:#{@version}\n")
     end
-  end
-
-  def generate_readme
-    readme = Readme.new(
-      name: @config['name'],
-      to_run: [
-        "docker build -t #{@config['name']} .",
-        "docker run -it --rm --name my-running-script -v \"$PWD\":/usr/src/myapp -w /usr/src/myapp node:#{@version} node #{@entry}"
-      ]
-    )
-    readme.save(@directory)
+    @usage_commands = [
+      "docker build -t #{@config['name']} .",
+      "docker run -it --rm --name my-running-script -v \"$PWD\":/usr/src/myapp -w /usr/src/myapp node:#{@version} node #{@entry}"
+    ]
   end
 
   def generate_package_json
